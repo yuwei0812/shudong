@@ -1,0 +1,14 @@
+# Render 部署配置：登录 render.com → New → Blueprint → 选这个仓库即可
+services:
+  - type: web
+    name: shudong
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node server.js
+    envVars:
+      - key: ADMIN_KEY
+        sync: false   # 部署时在 Render 控制台填自己的口令
+      # 想要数据持久化，需要付费版磁盘；免费版重启会清空数据：
+      # - key: DATA_FILE
+      #   value: /data/data.json

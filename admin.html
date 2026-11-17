@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>树洞 · 管理后台</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { padding-top: 40px; }
+    .admin-wrap { max-width: 720px; margin: 0 auto; position: relative; z-index: 1; }
+    .admin-card {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 22px;
+      box-shadow: 0 10px 30px rgba(140, 160, 150, 0.1);
+      padding: 22px;
+      margin-bottom: 16px;
+    }
+    .admin-row { display: flex; gap: 10px; }
+    .admin-row input {
+      flex: 1;
+      border: 2px dashed #e3e9e3;
+      background: #fbfcf9;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      color: #4a5568;
+    }
+    .admin-btn {
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7fc8a9, #5fae8e);
+      color: #fff;
+      font-weight: 700;
+      padding: 10px 20px;
+      border-radius: 999px;
+      font-family: inherit;
+    }
+    #status { font-size: 12px; color: #b0b8c0; margin-top: 10px; }
+    .admin-post { border-top: 1px dashed #f0e9dd; padding: 14px 4px; display: flex; gap: 12px; align-items: flex-start; }
+    .admin-post .body { flex: 1; min-width: 0; }
+    .admin-post .meta { font-size: 12px; color: #b0b8c0; margin-bottom: 4px; }
+    .admin-post p { white-space: pre-wrap; word-break: break-word; line-height: 1.7; font-size: 14px; }
+    .del-btn {
+      border: none;
+      background: #ffe4dc;
+      color: #d9534f;
+      border-radius: 999px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-family: inherit;
+      flex: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <h1 style="color: #5f7a6d; text-align: center; font-size: 24px; margin-bottom: 6px;">🌳 树洞 · 管理后台</h1>
+    <p style="text-align: center; color: #8a94a6; font-size: 13px; margin-bottom: 22px;">
+      输入管理员口令后可删除违规悄悄话（口令就是服务器环境变量 ADMIN_KEY）
+    </p>
+
+    <div class="admin-card">
+      <div class="admin-row">
+        <input id="key" type="password" placeholder="管理员口令（ADMIN_KEY）" autocomplete="current-password" />
+        <button class="admin-btn" id="loadBtn">加载悄悄话</button>
+      </div>
+      <p id="status"></p>
+    </div>
+
+    <div id="postList"></div>
+  </div>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const keyEl = $('#key');
+    const statusEl = $('#status');
+    let posts = [];
+
+    keyEl.value = sessionStorage.getItem('shudong_admin_key') || '';
+
+    function setStatus(msg) {
+      statusEl.textContent = msg;
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function render() {
+      const el = $('#postList');
+      if (!posts.length) {
+        el.innerHTML = '<div class="admin-card empty">树洞空空的，没有悄悄话</div>';
+        return;
+      }
+      el.innerHTML = posts
+        .map(
+          (p) => `
+        <div class="admin-card admin-post">
+          <div class="body">
+            <div class="meta">#${p.id} · ${p.tag} · ${p.nickname} ${p.avatar} · ${new Date(p.createdAt).toLocaleString()} · 🤗 ${p.hugs} · 💬 ${p.replies.length}</div>
+            <p>${escapeHtml(p.content)}</p>
+          </div>
+          <button class="del-btn" data-del="${p.id}">删除</button>
+        </div>`
+        )
+        .join('');
+    }
+
+    async function load() {
+      const key = keyEl.value.trim();
+      if (!key) return setStatus('请先输入管理员口令');
+      sessionStorage.setItem('shudong_admin_key', key);
+      try {
+        const res = await fetch('/api/posts');
+        if (!res.ok) throw new Error('加载失败');
+        const json = await res.json();
+        posts = json.posts;
+        render();
+        setStatus(`共 ${posts.length} 条悄悄话`);
+      } catch (e) {
+        setStatus('加载失败：' + e.message);
+      }
+    }
+
+    async function del(id) {
+      const key = keyEl.value.trim();
+      if (!key) return setStatus('请先输入管理员口令');
+      if (!confirm('确定删除这条悄悄话吗？删除后无法恢复。')) return;
+      try {
+        const res = await fetch('/api/posts/' + id, {
+          method: 'DELETE',
+          headers: { 'x-admin-key': key },
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => null);
+          throw new Error((j && j.error) || 'HTTP ' + res.status);
+        }
+        posts = posts.filter((p) => p.id !== id);
+        render();
+        setStatus('已删除 ✅');
+      } catch (e) {
+        setStatus('删除失败：' + e.message);
+      }
+    }
+
+    $('#loadBtn').addEventListener('click', load);
+    $('#postList').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-del]');
+      if (btn) del(Number(btn.dataset.del));
+    });
+    keyEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') load();
+    });
+  </script>
+</body>
+</html>

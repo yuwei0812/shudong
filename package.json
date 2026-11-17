@@ -1,0 +1,13 @@
+{
+  "name": "shudong",
+  "version": "1.0.0",
+  "description": "🌳 树洞 · 悄悄话 —— 匿名情绪树洞",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

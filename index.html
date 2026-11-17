@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>树洞 · 悄悄话</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 漂浮的小装饰 -->
+  <div class="deco" aria-hidden="true">
+    <span style="left:8%;top:12%;animation-delay:0s">☁️</span>
+    <span style="left:22%;top:70%;animation-delay:2s">🍃</span>
+    <span style="left:85%;top:20%;animation-delay:1s">☁️</span>
+    <span style="left:70%;top:80%;animation-delay:4s">🌸</span>
+    <span style="left:45%;top:8%;animation-delay:6s">🍃</span>
+    <span style="left:92%;top:60%;animation-delay:3s">🌙</span>
+    <span style="left:12%;top:40%;animation-delay:7s">⭐</span>
+    <span style="left:58%;top:45%;animation-delay:5s">🫧</span>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <div class="logo">🌳</div>
+      <h1>树洞 · 悄悄话</h1>
+      <p class="sub">把心事轻轻放进树洞里，会有人温柔地接住它。</p>
+    </header>
+
+    <!-- 投递区 -->
+    <section class="card compose">
+      <textarea id="content" maxlength="500" rows="4"
+        placeholder="今天发生了什么呀？开心的、难过的、想不明白的，都可以说给树洞听……"></textarea>
+      <div class="tags" id="tagPicker"></div>
+      <div class="compose-bottom">
+        <input id="nickname" maxlength="10" placeholder="你的代号（留空会获得一个随机小昵称）" />
+        <button id="postBtn">投进树洞 🌱</button>
+      </div>
+      <div class="hint">
+        <span id="charCount">0 / 500</span>
+        · 树洞公约：温柔回应 · 不评判 · 不透露隐私 🤝
+      </div>
+    </section>
+
+    <!-- 筛选 -->
+    <nav class="filters" id="filters"></nav>
+
+    <!-- 悄悄话列表 -->
+    <main id="list" aria-live="polite"></main>
+
+    <button id="refreshBtn" class="refresh">🔄 看看新的话</button>
+  </div>
+
+  <footer>这里没有名字，只有温柔。所有悄悄话都会被树洞好好保管 🌙</footer>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
